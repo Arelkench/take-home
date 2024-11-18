@@ -1,14 +1,18 @@
 import {useQuery} from "@tanstack/react-query";
 import mockJson from "./mock.json";
 
+/**
+ * I have decided to add isDeleted property
+ * It helps us to remove DeletedListItem, without affecting description property
+ * So it makes it possible for us to move deleted item from localStorage back to store
+ */
 export type ListItem = {
   id: number;
   title: string;
   description: string;
   isVisible: boolean;
+  isDeleted: boolean;
 };
-
-export type DeletedListItem = Omit<ListItem, "description">;
 
 export const useGetListData = () => {
   return useQuery({
