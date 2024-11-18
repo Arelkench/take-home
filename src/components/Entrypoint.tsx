@@ -2,14 +2,19 @@ import { useEffect, useState } from "react";
 import { useGetListData } from "../api/getListData";
 import { Spinner } from "./Spinner";
 import { List } from "./List.tsx";
-import {useCardStore} from "../store/store.ts";
+import { useCardStore } from "../store/store.ts";
 
 export const Entrypoint = () => {
     const listQuery = useGetListData();
     const { visibleCards, deletedCards, initializeCards } = useCardStore();
     const [isDeletedCardsVisible, setIsDeletedCardsVisible] = useState(false);
 
-    const handleRevealClick = () => setIsDeletedCardsVisible(!isDeletedCardsVisible);
+    const handleRevealClick = () => {
+        const newVisibility = !isDeletedCardsVisible;
+        setIsDeletedCardsVisible(newVisibility);
+
+        localStorage.setItem("deletedCardsVisible", JSON.stringify(newVisibility));
+    };
 
     useEffect(() => {
         if (listQuery.isLoading) {
@@ -27,6 +32,11 @@ export const Entrypoint = () => {
         } else {
             initializeCards(listQuery.data?.filter((item) => item.isVisible) ?? []);
         }
+
+        const storedVisibility = localStorage.getItem("deletedCardsVisible");
+        if (storedVisibility) {
+            setIsDeletedCardsVisible(JSON.parse(storedVisibility));
+        }
     }, [listQuery.data, listQuery.isLoading, initializeCards]);
 
     if (listQuery.isLoading) return <Spinner />;
@@ -36,6 +46,12 @@ export const Entrypoint = () => {
             <div className="w-full max-w-xl">
                 <List items={visibleCards} isVisible={true} title="My Awesome List" />
             </div>
+            <button
+                onClick={handleRevealClick}
+                className="text-white text-sm font-semibold transition-colors hover:bg-gray-800 bg-black rounded px-6 py-2 h-9"
+            >
+                Reveal
+            </button>
             <div className="w-full max-w-xl">
                 <div className="flex flex-col gap-y-3">
                     <List
@@ -45,12 +61,6 @@ export const Entrypoint = () => {
                     />
                 </div>
             </div>
-            <button
-                onClick={handleRevealClick}
-                className="text-white text-sm transition-colors hover:bg-gray-800 disabled:bg-black/75 bg-black rounded px-3 py-1"
-            >
-                Reveal
-            </button>
         </div>
     );
 };
