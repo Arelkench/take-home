@@ -32,7 +32,6 @@ export const Card = ({ title, description, cardId }: CardProps) => {
         deleteCard(cardId)
     }, [cardId, deleteCard])
 
-
     return (
         <div className="bg-white shadow-md rounded-md p-4 border border-gray-200" ref={parent}>
             <div className="flex justify-between items-center">

@@ -1,6 +1,6 @@
 import {Dispatch, SetStateAction, useCallback} from "react";
 import {useCardStore} from "../store.ts";
-import { ListItem } from "../api/getListData.ts";
+import {DeletedListItem, ListItem} from "../api/getListData.ts";
 
 export const useInitStore = () => {
     const { initializeCards } = useCardStore();
@@ -9,10 +9,20 @@ export const useInitStore = () => {
         const storedVisibleCards = localStorage.getItem("visibleCards");
         const storedDeletedCards = localStorage.getItem("deletedCards");
 
-        const visibleCards = storedVisibleCards ? JSON.parse(storedVisibleCards) : data
-        const deletedCards = storedDeletedCards ? JSON.parse(storedDeletedCards) : []
+        const deletedCards: DeletedListItem[] = storedDeletedCards ? JSON.parse(storedDeletedCards) : [];
+        const visibleCards: ListItem[] = (storedVisibleCards ? JSON.parse(storedVisibleCards) : data);
 
-        initializeCards(visibleCards, deletedCards)
+        const filteredVisibleCards = visibleCards.reduce<ListItem[]>((accumulator, card) => {
+            const isDeleted = deletedCards.some((deletedCard) => deletedCard.id === card.id)
+
+            if (isDeleted) {
+                return accumulator
+            }
+
+            return [...accumulator, card]
+        }, []);
+
+        initializeCards(filteredVisibleCards, deletedCards)
 
         const storedVisibleDeletedCards = localStorage.getItem("deletedCardsVisible");
 

@@ -4,6 +4,7 @@ import { Spinner } from "./Spinner";
 import { List } from "./List.tsx";
 import { useCardStore } from "../store";
 import {useInitStore} from "../hooks";
+import {LOCAL_STORAGE_KEYS} from "../constant";
 
 export const Entrypoint = () => {
     const { refetch, data, isLoading, isFetching} = useGetListData();
@@ -14,11 +15,11 @@ export const Entrypoint = () => {
 
     const handleRevealClick = useCallback(() => {
         setAreDeletedCardsVisible((prevState) => !prevState);
-        localStorage.setItem("deletedCardsVisible", JSON.stringify(areDeletedCardsVisible));
+        localStorage.setItem(LOCAL_STORAGE_KEYS.areDeletedCardsShown, JSON.stringify(areDeletedCardsVisible));
     },[areDeletedCardsVisible])
 
     const handleRefreshClick = useCallback(async () => {
-        localStorage.removeItem("visibleCards")
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.visibleCards)
         await refetch();
     },[refetch])
 
@@ -31,7 +32,7 @@ export const Entrypoint = () => {
         initStore(filteredData, setAreDeletedCardsVisible)
     }, [data, isLoading, isFetching, initStore]);
 
-    if (visibleCards.length === 0 || isLoading || isFetching) {
+    if (isLoading || isFetching) {
         return <Spinner />;
     }
 

@@ -1,5 +1,6 @@
 import {create} from "zustand";
 import { DeletedListItem, ListItem } from "./api/getListData.ts";
+import {LOCAL_STORAGE_KEYS} from "./constant";
 
 type StoreState = {
     visibleCards: ListItem[];
@@ -25,8 +26,8 @@ export const useCardStore = create<StoreState>((set) => ({
                 { id: cardToDelete.id, title: cardToDelete.title, isVisible: cardToDelete.isVisible},
             ];
 
-            localStorage.setItem("visibleCards", JSON.stringify(updatedVisibleCards));
-            localStorage.setItem("deletedCards", JSON.stringify(updatedDeletedCards));
+            localStorage.setItem(LOCAL_STORAGE_KEYS.visibleCards, JSON.stringify(updatedVisibleCards));
+            localStorage.setItem(LOCAL_STORAGE_KEYS.deletedCards, JSON.stringify(updatedDeletedCards));
 
             return {
                 visibleCards: updatedVisibleCards,
