@@ -1,53 +1,56 @@
 import { useEffect, useState } from "react";
-import { ListItem, useGetListData } from "../api/getListData";
-import { Card } from "./List";
+import { useGetListData } from "../api/getListData";
 import { Spinner } from "./Spinner";
+import { List } from "./List.tsx";
+import {useCardStore} from "../store/store.ts";
 
 export const Entrypoint = () => {
-  const [visibleCards, setVisibleCards] = useState<ListItem[]>([]);
-  const listQuery = useGetListData();
+    const listQuery = useGetListData();
+    const { visibleCards, deletedCards, initializeCards } = useCardStore();
+    const [isDeletedCardsVisible, setIsDeletedCardsVisible] = useState(false);
 
-  // TOOD
-  // const deletedCards: DeletedListItem[] = [];
+    const handleRevealClick = () => setIsDeletedCardsVisible(!isDeletedCardsVisible);
 
-  useEffect(() => {
-    if (listQuery.isLoading) {
-      return;
-    }
+    useEffect(() => {
+        if (listQuery.isLoading) {
+            return;
+        }
 
-    setVisibleCards(listQuery.data?.filter((item) => item.isVisible) ?? []);
-  }, [listQuery.data, listQuery.isLoading]);
+        const storedVisibleCards = localStorage.getItem("visibleCards");
+        const storedDeletedCards = localStorage.getItem("deletedCards");
 
-  if (listQuery.isLoading) {
-    return <Spinner />;
-  }
+        if (storedVisibleCards && storedDeletedCards) {
+            initializeCards(JSON.parse(storedVisibleCards));
+            useCardStore.setState({
+                deletedCards: JSON.parse(storedDeletedCards),
+            });
+        } else {
+            initializeCards(listQuery.data?.filter((item) => item.isVisible) ?? []);
+        }
+    }, [listQuery.data, listQuery.isLoading, initializeCards]);
 
-  return (
-    <div className="flex gap-x-16">
-      <div className="w-full max-w-xl">
-        <h1 className="mb-1 font-medium text-lg">My Awesome List ({visibleCards.length})</h1>
-        <div className="flex flex-col gap-y-3">
-          {visibleCards.map((card) => (
-            <Card key={card.id} title={card.title} description={card.description} />
-          ))}
+    if (listQuery.isLoading) return <Spinner />;
+
+    return (
+        <div className="flex gap-x-16 w-full justify-center align-top">
+            <div className="w-full max-w-xl">
+                <List items={visibleCards} isVisible={true} title="My Awesome List" />
+            </div>
+            <div className="w-full max-w-xl">
+                <div className="flex flex-col gap-y-3">
+                    <List
+                        items={deletedCards}
+                        isVisible={isDeletedCardsVisible}
+                        title="Deleted Cards"
+                    />
+                </div>
+            </div>
+            <button
+                onClick={handleRevealClick}
+                className="text-white text-sm transition-colors hover:bg-gray-800 disabled:bg-black/75 bg-black rounded px-3 py-1"
+            >
+                Reveal
+            </button>
         </div>
-      </div>
-      <div className="w-full max-w-xl">
-        <div className="flex items-center justify-between">
-          <h1 className="mb-1 font-medium text-lg">Deleted Cards (0)</h1>
-          <button
-            disabled
-            className="text-white text-sm transition-colors hover:bg-gray-800 disabled:bg-black/75 bg-black rounded px-3 py-1"
-          >
-            Reveal
-          </button>
-        </div>
-        <div className="flex flex-col gap-y-3">
-          {/* {deletedCards.map((card) => (
-            <Card key={card.id} card={card} />
-          ))} */}
-        </div>
-      </div>
-    </div>
-  );
+    );
 };

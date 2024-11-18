@@ -24,7 +24,7 @@ export const useGetListData = () => {
       const mockData = mockJson as Omit<ListItem, "isVisible">[];
 
       return shuffle(mockData).map((item) => {
-        return { ...item, isVisible: getRandom() > 50 ? true : false };
+        return { ...item, isVisible: getRandom() > 50 };
       });
     },
   });

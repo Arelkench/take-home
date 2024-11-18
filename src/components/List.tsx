@@ -1,26 +1,35 @@
-import { FC } from "react";
-import { ListItem } from "../api/getListData";
-import { DeleteButton, ExpandButton } from "./Buttons";
-import { ChevronUpIcon } from "./icons";
+import { DeletedListItem, ListItem } from "../api/getListData.ts";
+import { Card } from "./Card.tsx";
+import {useCardStore} from "../store/store.ts";
+import {useCallback} from "react";
 
-type CardProps = {
-  title: ListItem["title"];
-  description: ListItem["description"];
+type Props = {
+    items: (ListItem | DeletedListItem)[];
+    isVisible: boolean;
+    title: string;
 };
 
-export const Card: FC<CardProps> = ({ title, description }) => {
-  return (
-    <div className="border border-black px-2 py-1.5">
-      <div className="flex justify-between mb-0.5">
-        <h1 className="font-medium">{title}</h1>
-        <div className="flex">
-          <ExpandButton>
-            <ChevronUpIcon />
-          </ExpandButton>
-          <DeleteButton />
-        </div>
-      </div>
-      <p className="text-sm">{description}</p>
-    </div>
-  );
+export const List = ({ items, isVisible, title }: Props) => {
+    const { deleteCard } = useCardStore();
+
+    const handleDeleteCard = useCallback((cardId: number) => () => {
+        deleteCard(cardId)
+    }, [deleteCard])
+
+    return (
+        <>
+            <h1 className="mb-1 font-medium text-lg">
+                {title} ({items.length})
+            </h1>
+            {isVisible &&
+                items.map((card) => (
+                    <Card
+                        key={card.id}
+                        title={card.title}
+                        description={"description" in card ? card.description : undefined}
+                        onDelete={"description" in card ? handleDeleteCard(card.id) : undefined}
+                    />
+                ))}
+        </>
+    );
 };
