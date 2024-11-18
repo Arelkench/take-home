@@ -7,7 +7,7 @@ import { useCardStore } from "../store/store.ts";
 export const Entrypoint = () => {
     const [areDeletedCardsVisible, setAreDeletedCardsVisible] = useState(false);
 
-    const listQuery = useGetListData();
+    const {refetch, data, isLoading, isFetching} = useGetListData();
 
     const { visibleCards, deletedCards, initializeCards } = useCardStore();
 
@@ -18,11 +18,11 @@ export const Entrypoint = () => {
     },[areDeletedCardsVisible])
 
     const handleRefreshClick = useCallback(async () => {
-        await listQuery.refetch();
-    },[listQuery])
+        await refetch();
+    },[refetch])
 
     useEffect(() => {
-        if (listQuery.isLoading || listQuery.isFetching) {
+        if (isLoading || isFetching) {
             return;
         }
 
@@ -36,7 +36,7 @@ export const Entrypoint = () => {
                 deletedCards: JSON.parse(storedDeletedCards),
             });
         } else {
-            initializeCards(listQuery.data?.filter((item) => item.isVisible) ?? []);
+            initializeCards(data?.filter((item) => item.isVisible) ?? []);
         }
 
         const storedVisibility = localStorage.getItem("deletedCardsVisible");
@@ -44,10 +44,10 @@ export const Entrypoint = () => {
         if (storedVisibility) {
             setAreDeletedCardsVisible(JSON.parse(storedVisibility));
         }
-    }, [listQuery.data, listQuery.isLoading, initializeCards, listQuery.isFetching]);
+    }, [data, isLoading, initializeCards, isFetching]);
 
 
-    if (listQuery.isLoading || listQuery.isFetching) {
+    if (isLoading || isFetching) {
         return <Spinner />;
     }
 
