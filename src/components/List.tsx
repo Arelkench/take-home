@@ -1,7 +1,6 @@
 import { DeletedListItem, ListItem } from "../api/getListData.ts";
 import { Card } from "./Card.tsx";
-import { useCardStore } from "../store/store.ts";
-import { useCallback } from "react";
+import { useMemo } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 type Props = {
@@ -10,16 +9,19 @@ type Props = {
     title: string;
 };
 
+const isListItem = (value: unknown): value is ListItem => Boolean(value && typeof value === 'object' && 'description' in value)
+
 export const List = ({ items, isVisible, title }: Props) => {
-    const { deleteCard } = useCardStore();
     const [parent] = useAutoAnimate<HTMLDivElement>();
 
-    const handleDeleteCard = useCallback(
-        (cardId: number) => () => {
-            deleteCard(cardId);
-        },
-        [deleteCard]
-    );
+    const renderedCards = useMemo(() => items.map((card) => (
+            <Card
+                key={card.id}
+                cardId={card.id}
+                title={card.title}
+                description={isListItem(card) ? card.description : undefined}
+            />
+        )), [items])
 
     return (
         <div>
@@ -27,16 +29,7 @@ export const List = ({ items, isVisible, title }: Props) => {
                 {title} ({items.length})
             </h1>
             <div ref={parent} className="space-y-3">
-                {isVisible &&
-                    items.map((card) => (
-                        <Card
-                            key={card.id}
-                            cardId={card.id}
-                            title={card.title}
-                            description={"description" in card ? card.description : undefined}
-                            onDelete={"description" in card ? handleDeleteCard(card.id) : undefined}
-                        />
-                    ))}
+                {isVisible && renderedCards}
             </div>
         </div>
     );
