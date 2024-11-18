@@ -3,14 +3,14 @@ import { useGetListData } from "../api/getListData";
 import { Spinner } from "./Spinner";
 import { List } from "./List.tsx";
 import { useCardStore } from "../store";
+import {useInitStore} from "../hooks";
 
 export const Entrypoint = () => {
-    const [ areDeletedCardsVisible, setAreDeletedCardsVisible] = useState(false);
-
     const { refetch, data, isLoading, isFetching} = useGetListData();
+    const { visibleCards, deletedCards } = useCardStore();
 
-    const { visibleCards, deletedCards, initializeCards } = useCardStore();
-
+    const [areDeletedCardsVisible, setAreDeletedCardsVisible] = useState(false);
+    const { initStore } = useInitStore();
 
     const handleRevealClick = useCallback(() => {
         setAreDeletedCardsVisible((prevState) => !prevState);
@@ -22,30 +22,16 @@ export const Entrypoint = () => {
         await refetch();
     },[refetch])
 
-    const storedVisibleCards = localStorage.getItem("visibleCards");
-    const storedDeletedCards = localStorage.getItem("deletedCards");
-
     useEffect(() => {
         if (isLoading || isFetching) {
             return;
         }
+        const filteredData = data?.filter((item) => item.isVisible) ?? []
 
-        if (storedVisibleCards && storedDeletedCards) {
-            initializeCards(JSON.parse(storedVisibleCards), JSON.parse(storedDeletedCards));
-        } else if (storedDeletedCards) {
-            initializeCards(data?.filter((item) => item.isVisible) ?? [], JSON.parse(storedDeletedCards));
-        } else {
-            initializeCards(data?.filter((item) => item.isVisible) ?? [])
-        }
+        initStore(filteredData, setAreDeletedCardsVisible)
+    }, [data, isLoading, isFetching, initStore]);
 
-        const storedVisibility = localStorage.getItem("deletedCardsVisible");
-
-        if (storedVisibility) {
-            setAreDeletedCardsVisible(JSON.parse(storedVisibility));
-        }
-    }, [data, isLoading, initializeCards, isFetching, storedVisibleCards, storedDeletedCards]);
-
-    if (isLoading || isFetching) {
+    if (visibleCards.length === 0 || isLoading || isFetching) {
         return <Spinner />;
     }
 
