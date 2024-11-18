@@ -2,12 +2,12 @@ import {useCallback, useEffect, useState} from "react";
 import { useGetListData } from "../api/getListData";
 import { Spinner } from "./Spinner";
 import { List } from "./List.tsx";
-import { useCardStore } from "../store/store.ts";
+import { useCardStore } from "../store";
 
 export const Entrypoint = () => {
-    const [areDeletedCardsVisible, setAreDeletedCardsVisible] = useState(false);
+    const [ areDeletedCardsVisible, setAreDeletedCardsVisible] = useState(false);
 
-    const {refetch, data, isLoading, isFetching} = useGetListData();
+    const { refetch, data, isLoading, isFetching} = useGetListData();
 
     const { visibleCards, deletedCards, initializeCards } = useCardStore();
 
@@ -18,25 +18,24 @@ export const Entrypoint = () => {
     },[areDeletedCardsVisible])
 
     const handleRefreshClick = useCallback(async () => {
+        localStorage.removeItem("visibleCards")
         await refetch();
     },[refetch])
+
+    const storedVisibleCards = localStorage.getItem("visibleCards");
+    const storedDeletedCards = localStorage.getItem("deletedCards");
 
     useEffect(() => {
         if (isLoading || isFetching) {
             return;
         }
 
-
-        const storedVisibleCards = localStorage.getItem("visibleCards");
-        const storedDeletedCards = localStorage.getItem("deletedCards");
-
         if (storedVisibleCards && storedDeletedCards) {
-            initializeCards(JSON.parse(storedVisibleCards));
-            useCardStore.setState({
-                deletedCards: JSON.parse(storedDeletedCards),
-            });
+            initializeCards(JSON.parse(storedVisibleCards), JSON.parse(storedDeletedCards));
+        } else if (storedDeletedCards) {
+            initializeCards(data?.filter((item) => item.isVisible) ?? [], JSON.parse(storedDeletedCards));
         } else {
-            initializeCards(data?.filter((item) => item.isVisible) ?? []);
+            initializeCards(data?.filter((item) => item.isVisible) ?? [])
         }
 
         const storedVisibility = localStorage.getItem("deletedCardsVisible");
@@ -44,8 +43,7 @@ export const Entrypoint = () => {
         if (storedVisibility) {
             setAreDeletedCardsVisible(JSON.parse(storedVisibility));
         }
-    }, [data, isLoading, initializeCards, isFetching]);
-
+    }, [data, isLoading, initializeCards, isFetching, storedVisibleCards, storedDeletedCards]);
 
     if (isLoading || isFetching) {
         return <Spinner />;

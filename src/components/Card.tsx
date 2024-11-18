@@ -2,7 +2,7 @@ import { ListItem } from "../api/getListData";
 import { DeleteButton, ExpandButton } from "./Buttons";
 import { ChevronUpIcon } from "./icons";
 import {useState, useCallback} from "react";
-import {useCardStore} from "../store/store.ts";
+import {useCardStore} from "../store";
 import {useAutoAnimate} from "@formkit/auto-animate/react";
 
 type CardProps = {
@@ -21,9 +21,12 @@ export const Card = ({ title, description, cardId }: CardProps) => {
     const [parent] = useAutoAnimate<HTMLDivElement>();
 
     const handleOpen = useCallback(() => {
-        setIsOpen(!isOpen)
-        localStorage.setItem(`expanded-${cardId}`, JSON.stringify(isOpen));
-    }, [cardId, isOpen])
+        setIsOpen((prevState) => {
+            localStorage.setItem(`expanded-${cardId}`, JSON.stringify(!prevState));
+
+            return !prevState;
+        })
+    }, [cardId])
 
     const handleDelete = useCallback(() => {
         deleteCard(cardId)
